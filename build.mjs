@@ -53,15 +53,15 @@ await Promise.all(
 				.on(`style[head]`,{element:e=>e.remove(),text:x=>css+=x.text+(x.lastInTextNode?'\n':'')})
 				.transform(await Bun.file(join(dst,x.path)).text()).trim()+'\n',
 			style:css.slice(0,-1),
-			build:(
+			build:await(async()=>(
 				mod=new VM.SourceTextModule(mod),
 				mod.linkRequests(mod.moduleRequests.map(x=>modules[x.specifier])),
 				mod.instantiate(),
 				await mod.evaluate(),
 				mod.namespace.default
-			)
+			))().catch(console.log)
 		}))()),
-		x=x.build?.(x)??x,
+		x=await(async()=>x.build?.(x))().catch(console.log)??x,
 		await Bun.write(join(dst,x.path),x.html),
 		0
 	))
