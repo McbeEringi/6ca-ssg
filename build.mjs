@@ -3,8 +3,9 @@ import{join}from'node:path';
 import VM from'node:vm';
 
 const
-src='./src',
-dst='./dst',
+root=import.meta.dir,
+src=join(root,'src'),
+dst=join(root,'dst'),
 modules=Object.entries({
 	config_default:{
 		title:'Hello world!',
