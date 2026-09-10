@@ -31,6 +31,7 @@ modules=Object.entries({
 	<meta property="og:image" content="${new URL(c.ogpimg,url)}">
 	<link href="/src/style.css" rel="stylesheet">
 ${x.style?`\t<style>${x.style}</style>\n`:''}\
+	<script>document.documentElement.addEventListener('touchstart',_=>_,{passive:true});</script>
 </head><body>
 ${x.html}\
 </body></html>
