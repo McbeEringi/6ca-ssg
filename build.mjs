@@ -42,7 +42,7 @@ ${x.html}\
 	a
 ),{});
 
-await Bun.$`rm -rf ${dst}`;
+await Bun.$`rm -rf ${dst}/*`.quiet().catch(_=>_);
 await Bun.$`cp -R ${src}/. ${dst}`;
 
 await Promise.all(
