@@ -6,6 +6,7 @@ const
 root=import.meta.dir,
 src=join(root,'src'),
 dst=join(root,'dst'),
+mkmod=f=>(x=>x=new VM.SyntheticModule(['default'],_=>x.setExport('default',f())))(),
 modules=Object.entries({
 	config_default:{
 		title:'Hello world!',
@@ -38,7 +39,7 @@ ${x.html}\
 `
 	}))()
 }).reduce((a,[i,x])=>(
-	a[i]=new VM.SyntheticModule(['default'],_=>a[i].setExport('default',x)),
+	a[i]=mkmod(_=>x),
 	a
 ),{});
 
@@ -49,7 +50,7 @@ await Promise.all(
 	new Bun.Glob('**/*.html').scanSync(src)[Symbol.iterator]().map(async x=>(
 		console.log(x),
 		x={path:x},
-		Object.assign(x,await(async(mod='',css='')=>({
+		Object.assign(x,await(async(mod=`process.chdir('${join(dst,x.path,'../')}');\n`,css='')=>({
 			html:new HTMLRewriter()
 				.on(`script[type=build]`,{element:e=>e.remove(),text:x=>mod+=x.text+(x.lastInTextNode?'\n':'')})
 				.on(`style[head]`,{element:e=>e.remove(),text:x=>css+=x.text+(x.lastInTextNode?'\n':'')})
@@ -57,11 +58,11 @@ await Promise.all(
 			style:css.slice(0,-1),
 			build:await(async()=>(
 				mod=new VM.SourceTextModule(mod),
-				mod.linkRequests(mod.moduleRequests.map(x=>modules[x.specifier])),
+				mod.linkRequests(mod.moduleRequests.map(x=>modules[x.specifier]??mkmod(_=>Bun.file(join(dst,x.specifier))))),
 				mod.instantiate(),
 				await mod.evaluate(),
 				mod.namespace.default
-			))().catch(console.log)
+			))().catch(e=>console.warn(x.path,e))
 		}))()),
 		x=await(async()=>x.build?.(x))().catch(console.log)??x,
 		await Bun.write(join(dst,x.path),x.html),
