@@ -16,8 +16,8 @@ await Bun.$`cp -R ${src}/. ${dst}`;
 await Promise.all(
 	[...new Bun.Glob('**/*.html').scanSync(src)].sort().map(async x=>(
 		console.log(x),
-		x={path:x},
-		Object.assign(x,await(async(mod=`process.chdir('${join(dst,x.path,'../')}');\n`,css='')=>({
+		x={path:x,cwd:join(dst,x,'../')},
+		Object.assign(x,await(async(mod='',css='')=>({
 			html:new HTMLRewriter()
 				.on(`script[type=build]`,{element:e=>e.remove(),text:x=>mod+=x.text+(x.lastInTextNode?'\n':'')})
 				.on(`style[head]`,{element:e=>e.remove(),text:x=>css+=x.text+(x.lastInTextNode?'\n':'')})
@@ -25,7 +25,8 @@ await Promise.all(
 			style:css.slice(0,-1),
 			build:await(async()=>(
 				mod=new VM.SourceTextModule(mod),
-				mod.linkRequests(mod.moduleRequests.map(x=>modules[x.specifier]??mkmod(_=>Bun.file(join(dst,x.specifier))))),
+				mod.linkRequests(mod.moduleRequests.map(({specifier:n})=>modules[n]??mkmod(_=>Bun.file(join(x.cwd,n))))),
+				process.chdir(x.cwd),
 				mod.instantiate(),
 				await mod.evaluate(),
 				mod.namespace.default
