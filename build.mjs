@@ -7,10 +7,29 @@ const
 root=import.meta.dir,
 src=join(root,'src'),
 dst=join(root,'dst'),
-mkmod=f=>(x=>x=new VM.SyntheticModule(['default'],_=>x.setExport('default',f())))(),
-modules=Object.entries(MODS).reduce((a,[i,x])=>(a[i]=mkmod(_=>x),a),{});
+elog=(...x)=>e=>(console.warn(...x),console.warn(e)),
+mksynmod=f=>(x=>x=new VM.SyntheticModule(['default'],_=>x.setExport('default',f())))(),
+modules=Object.entries(MODS).reduce((a,[i,x])=>(a[i]=mksynmod(_=>x),a),{}),
+mksrcmod=async({src,path})=>(
+	src=new VM.SourceTextModule(src,{identifier:path}),
+	src.linkRequests(
+		await Promise.all(
+			src.moduleRequests.map(async({specifier:n,x})=>modules[n]??(
+				x=Bun.file(join(path,'../',n)),
+				await x.exists()?(
+					x.type.match(/^text\/javascript;?/)?await mksrcmod({src:await x.text(),path:x.name}):mksynmod(_=>x)
+				):null
+			)??(
+				x=await import(n).catch(elog('ImportError at',path)),
+				mksynmod(_=>x)
+			))
+		)
+	),
+	src.instantiate(),
+	src
+);
 
-await Bun.$`rm -rf ${dst}/*`.quiet().catch(_=>_);
+await Bun.$`rm -rf ${dst}/*`.quiet().catch(e=>console.log(e.stderr.toJSON()));
 await Bun.$`cp -R ${src}/. ${dst}`;
 
 await Promise.all(
@@ -24,15 +43,12 @@ await Promise.all(
 				.transform(await Bun.file(join(dst,x.path)).text()).trim()+'\n',
 			style:css.slice(0,-1),
 			build:await(async()=>(
-				mod=new VM.SourceTextModule(mod),
-				mod.linkRequests(mod.moduleRequests.map(({specifier:n})=>modules[n]??mkmod(_=>Bun.file(join(x.cwd,n))))),
-				process.chdir(x.cwd),
-				mod.instantiate(),
+				mod=await mksrcmod({src:mod,path:join(dst,x.path)}),
 				await mod.evaluate(),
 				mod.namespace.default
-			))().catch(e=>console.warn(x.path,e))
+			))().catch(elog('EvalError at',x.path))
 		}))()),
-		x=await(async()=>x.build?.(x))().catch(console.log)??x,
+		x=await(async()=>x.build?.(x))().catch(elog('ExecError at',x.path))??x,
 		await Bun.write(join(dst,x.path),x.html),
 		0
 	))
