@@ -14,7 +14,7 @@ await Bun.$`rm -rf ${dst}/*`.quiet().catch(_=>_);
 await Bun.$`cp -R ${src}/. ${dst}`;
 
 await Promise.all(
-	new Bun.Glob('**/*.html').scanSync(src)[Symbol.iterator]().map(async x=>(
+	[...new Bun.Glob('**/*.html').scanSync(src)].sort().map(async x=>(
 		console.log(x),
 		x={path:x},
 		Object.assign(x,await(async(mod=`process.chdir('${join(dst,x.path,'../')}');\n`,css='')=>({
