@@ -4,7 +4,7 @@ import VM from'node:vm';
 import * as MODS from'./modules.mjs';
 
 const
-root=import.meta.dir,
+root='',//import.meta.dir,
 src=join(root,'src'),
 dst=join(root,'dst'),
 elog=(...x)=>e=>(console.warn(...x),console.warn(e)),
