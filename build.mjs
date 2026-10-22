@@ -10,15 +10,16 @@ dst=join(root,'dst'),
 elog=(...x)=>e=>(console.warn(...x),console.warn(e)),
 mksynmod=f=>(x=>x=new VM.SyntheticModule(['default'],_=>x.setExport('default',f())))(),
 modules=Object.entries(MODS).reduce((a,[i,x])=>(a[i]=mksynmod(_=>x),a),{}),
+mod_cache={},
 mksrcmod=async({src,path})=>(
 	src=new VM.SourceTextModule(src,{identifier:path}),
 	src.linkRequests(
 		await Promise.all(
 			src.moduleRequests.map(async({specifier:n,x})=>modules[n]??(
 				x=Bun.file(join(path,'../',n)),
-				await x.exists()?(
+				await x.exists()?(mod_cache[x.name]??=(
 					x.type.match(/^text\/javascript;?/)?await mksrcmod({src:await x.text(),path:x.name}):mksynmod(_=>x)
-				):null
+				)):null
 			)??(
 				x=await import(n).catch(elog('ImportError at',path)),
 				mksynmod(_=>x)
