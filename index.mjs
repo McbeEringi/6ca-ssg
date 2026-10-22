@@ -1,4 +1,4 @@
-#!/usr/bin/env -S bun --install=force
+#!/usr/bin/env -S bun
 import{join}from'node:path';
 import VM from'node:vm';
 import * as MODS from'./modules.mjs';
