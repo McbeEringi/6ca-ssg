@@ -1,0 +1,5 @@
+{
+	"scripts":{
+		"6ca-ssg":"bun ./build.mjs"
+	}
+}
