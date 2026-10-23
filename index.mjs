@@ -1,4 +1,4 @@
-#!/usr/bin/env -S bun
+#!/usr/bin/env -S bun --install=force
 import{join}from'node:path';
 import VM from'node:vm';
 import * as MODS from'./modules.mjs';
@@ -8,8 +8,14 @@ root=process.cwd(),//import.meta.dir,
 src=join(root,'src'),
 dst=join(root,'dst'),
 elog=(...x)=>e=>(console.warn(...x),console.warn(e)),
-mksynmod=f=>(x=>x=new VM.SyntheticModule(['default'],_=>x.setExport('default',f())))(),
-modules=Object.entries(MODS).reduce((a,[i,x])=>(a[i]=mksynmod(_=>x),a),{}),
+mksynmod=w=>w&&(m=>(
+	w={default:w,...w},
+	m=new VM.SyntheticModule(
+		Object.keys(w),
+		_=>Object.entries(w).forEach(([i,x])=>m.setExport(i,x))
+	)
+))(),
+modules=Object.entries(MODS).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
 mod_cache={},
 mksrcmod=async({src,path})=>(
 	src=new VM.SourceTextModule(src,{identifier:path}),
@@ -18,11 +24,10 @@ mksrcmod=async({src,path})=>(
 			src.moduleRequests.map(async({specifier:n,x})=>modules[n]??(
 				x=Bun.file(join(path,'../',n)),
 				await x.exists()?(mod_cache[x.name]??=(
-					x.type.match(/^text\/javascript;?/)?await mksrcmod({src:await x.text(),path:x.name}):mksynmod(_=>x)
+					x.type.match(/^text\/javascript;?/)?await mksrcmod({src:await x.text(),path:x.name}):mksynmod(x)
 				)):null
 			)??(
-				x=await import(n).catch(elog('ImportError at',path)),
-				mksynmod(_=>x)
+				mksynmod(await import(n).catch(elog('ImportError at',path)))
 			))
 		)
 	),
