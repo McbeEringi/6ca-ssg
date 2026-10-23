@@ -44,8 +44,8 @@ await Promise.all(
 		x={path:x,cwd:join(dst,x,'../')},
 		Object.assign(x,await(async(mod='',css='')=>({
 			html:new HTMLRewriter()
-				.on(`script[type=build]`,{element:e=>e.remove(),text:x=>mod+=x.text+(x.lastInTextNode?'\n':'')})
-				.on(`style[head]`,{element:e=>e.remove(),text:x=>css+=x.text+(x.lastInTextNode?'\n':'')})
+				.on(`script[type=build]`,{element:e=>(e.remove(),e.onEndTag(_=>mod+='\n')),text:x=>mod+=x.text})
+				.on(`style[head]`,{element:e=>(e.remove(),e.onEndTag(_=>mod+='\n')),text:x=>css+=x.text})
 				.transform(await Bun.file(join(dst,x.path)).text()).trim()+'\n',
 			style:css.slice(0,-1),
 			build:await(async()=>(
