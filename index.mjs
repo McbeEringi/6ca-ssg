@@ -60,22 +60,23 @@ await Bun.$`rm -rf ${dst}/*`.quiet().catch(e=>console.log(e.stderr.toJSON()));
 await Bun.$`cp -R ${src}/. ${dst}`;
 
 await Promise.all(
-	[...new Bun.Glob('**/*.html').scanSync(src)].sort().map(async x=>(
-		console.log(x),
-		x={path:x,cwd:join(dst,x,'../')},
-		Object.assign(x,await(async(mod='',css='')=>({
+	[...new Bun.Glob('**/*.html').scanSync(src)].sort().map(async(x,{mod='',css=[]}={})=>(
+		x={path:x},
+		console.log(x.path),
+		Object.assign(x,await(async()=>({
 			html:new HTMLRewriter()
 				.on(`script[type=build]`,{element:e=>(e.remove(),e.onEndTag(_=>mod+='\n')),text:x=>mod+=x.text})
-				.on(`style[head]`,{element:e=>(e.remove(),e.onEndTag(_=>css+='\n')),text:x=>css+=x.text})
+				.on(`style[head]`,{element:e=>(css.push(''),e.remove()),text:x=>css[css.length-1]+=x.text})
 				.transform(await Bun.file(join(dst,x.path)).text()).trim()+'\n',
-			style:css.slice(0,-1),
-			build:await(async()=>(
-				mod=await mksrcmod({src:mod,path:join(dst,x.path)}),
-				await mod.evaluate(),
-				mod.namespace.default
-			))().catch(elog('EvalError at',x.path))
+			style:css
 		}))()),
-		x=await(async()=>x.build?.(x))().catch(elog('ExecError at',x.path))??x,
+		x=await(async()=>(
+			mod=await mksrcmod({src:mod,path:join(dst,x.path)}).catch(elog('LinkError at',x.path)),
+			await mod.evaluate().catch(elog('EvalError at',x.path)),
+			await(async()=>(
+				mod.namespace.default?.(x)
+			))().catch(elog('ExecError at',x.path))
+		))(),
 		await Bun.write(join(dst,x.path),x.html),
 		0
 	))

@@ -22,7 +22,7 @@ html_tmpl=c=>x=>((
 	<meta property="og:url" content="${url}">
 	<meta property="og:image" content="${new URL(c.ogpimg,url)}">
 	<link href="/src/style.css" rel="stylesheet">
-${x.style?`\t<style>${x.style}</style>\n`:''}\
+${x.style.length?`\t<style>${x.style.join('\n')}\t</style>\n`:''}\
 	<script>document.documentElement.addEventListener('touchstart',_=>_,{passive:true});</script>
 </head><body>
 ${x.html}\
