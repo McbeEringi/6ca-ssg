@@ -17,10 +17,7 @@ argopt={
 },
 arg=parseArgs(argopt);
 
-arg.values.help&&(
-	console.log(argopt),
-	process.exit(0)
-);
+arg.values.help&&(console.log(argopt),process.exit(0));
 
 const
 root=process.cwd(),//import.meta.dir,
@@ -70,13 +67,13 @@ await Promise.all(
 				.transform(await Bun.file(join(dst,x.path)).text()).trim()+'\n',
 			style:css
 		}))()),
-		x=await(async()=>(
+		mod&&(x=await(async()=>(
 			mod=await mksrcmod({src:mod,path:join(dst,x.path)}).catch(elog('LinkError at',x.path)),
 			await mod.evaluate().catch(elog('EvalError at',x.path)),
 			await(async()=>(
 				mod.namespace.default?.(x)
 			))().catch(elog('ExecError at',x.path))
-		))()??x,
+		))()??x),
 		await Bun.write(join(dst,x.path),x.html),
 		0
 	))
