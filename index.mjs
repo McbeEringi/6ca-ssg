@@ -34,7 +34,9 @@ mksynmod=w=>w&&(m=>(
 		_=>Object.entries(w).forEach(([i,x])=>m.setExport(i,x))
 	)
 ))(),
-modules=Object.entries(await import(arg.values['module-index'])).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
+modules=Object.entries(
+	join(root,await import(arg.values['module-index']))
+).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
 mod_cache={},
 mksrcmod=async({src,path})=>(
 	src=new VM.SourceTextModule(src,{identifier:path}),
