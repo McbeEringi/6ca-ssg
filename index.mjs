@@ -35,7 +35,7 @@ mksynmod=w=>w&&(m=>(
 	)
 ))(),
 modules=Object.entries(
-	join(root,await import(arg.values['module-index']))
+	await import(join(root,arg.values['module-index']))
 ).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
 mod_cache={},
 mksrcmod=async({src,path})=>(
