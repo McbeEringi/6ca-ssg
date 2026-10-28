@@ -1,12 +1,31 @@
 #!/usr/bin/env -S bun --install=force
 import{join}from'node:path';
 import VM from'node:vm';
-import * as MODS from'./modules.mjs';
+import{parseArgs}from'node:util';
+
+const
+argopt={
+	args:Bun.argv.slice(2),
+	strict:true,
+	// allowPositionals:true,
+	options:{
+		'src-dir':{type:'string',short:'s',default:'src'},
+		'dst-dir':{type:'string',short:'d',default:'dst'},
+		'module-index':{type:'string',short:'m',default:'./modules.mjs'},
+		help:{type:'boolean',short:'h'}
+	}
+},
+arg=parseArgs(argopt);
+
+arg.values.help&&(
+	console.log(argopt),
+	process.exit(0)
+);
 
 const
 root=process.cwd(),//import.meta.dir,
-src=join(root,'src'),
-dst=join(root,'dst'),
+src=join(root,arg.values['src-dir']),
+dst=join(root,arg.values['dst-dir']),
 elog=(...x)=>e=>(console.warn(...x),console.warn(e)),
 mksynmod=w=>w&&(m=>(
 	w={default:w,...w},
@@ -15,7 +34,7 @@ mksynmod=w=>w&&(m=>(
 		_=>Object.entries(w).forEach(([i,x])=>m.setExport(i,x))
 	)
 ))(),
-modules=Object.entries(MODS).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
+modules=Object.entries(await import(arg.values['module-index'])).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
 mod_cache={},
 mksrcmod=async({src,path})=>(
 	src=new VM.SourceTextModule(src,{identifier:path}),
