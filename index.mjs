@@ -76,7 +76,7 @@ await Promise.all(
 			await(async()=>(
 				mod.namespace.default?.(x)
 			))().catch(elog('ExecError at',x.path))
-		))(),
+		))()??x,
 		await Bun.write(join(dst,x.path),x.html),
 		0
 	))
