@@ -28,6 +28,7 @@ Refer to the `example/` directory.
 1. Create a `module.mjs` file.
 	1. Implement the `tmpl` function used in the previous step.
 		- As named export.
+		If both named and default exports are found, named exports are ignored.
 		```js
 		export const {tmpl}={
 			tmpl:conf=>x=>(
