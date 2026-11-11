@@ -7,7 +7,7 @@ const
 argopt={
 	args:Bun.argv.slice(2),
 	strict:true,
-	// allowPositionals:true,
+	allowPositionals:true,
 	options:{
 		'src-dir':{type:'string',short:'s',default:'src'},
 		'dst-dir':{type:'string',short:'d',default:'dst'},
@@ -31,9 +31,10 @@ mksynmod=w=>w&&(m=>(
 		_=>Object.entries(w).forEach(([i,x])=>m.setExport(i,x))
 	)
 ))(),
-modules=Object.entries(
-	await import(join(root,arg.values['module-index']))
-).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
+modules=Object.entries({
+	...await import(join(root,arg.values['module-index'])),
+	args:arg.positionals
+}).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
 mod_cache={},
 mksrcmod=async({src,path})=>(
 	src=new VM.SourceTextModule(src,{identifier:path}),
