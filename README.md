@@ -27,27 +27,35 @@ Refer to the `example/` directory.
 	```
 1. Create a `module.mjs` file.
 	1. Implement the `tmpl` function used in the previous step.
-	```js
-	export const {tmpl}={
-		tmpl:conf=>x=>(
-			// x.path: Path to the HTML file being processed
-			// x.html: File content excluding <script type="build"> and <style head> blocks
-			// x.style: An array containing the contents of the <style head> blocks
-			x.html = `
-			<!DOCTYPE html>
-			<html>
-			<head>
-			<meta charset="utf-8">
-			<meta name="viewport" content="width=device-width,initial-scale=1">
-			<title>${conf.title}</title>
-			<style>${x.style.join('\n')}</style>
-			</head>
-			<body>${x.html}</body>
-			</html>`,
-			x // x.html is output to x.path
-		)
-	};
-	```
+		- As named export.
+		```js
+		export const {tmpl}={
+			tmpl:conf=>x=>(
+				// x.path: Path to the HTML file being processed
+				// x.html: File content excluding <script type="build"> and <style head> blocks
+				// x.style: An array containing the contents of the <style head> blocks
+				x.html = `
+				<!DOCTYPE html>
+				<html>
+				<head>
+				<meta charset="utf-8">
+				<meta name="viewport" content="width=device-width,initial-scale=1">
+				<title>${conf.title}</title>
+				<style>${x.style.join('\n')}</style>
+				</head>
+				<body>${x.html}</body>
+				</html>`,
+				x // x.html is output to x.path
+			)
+		};
+		```
+		- As returned value of default export function.
+		Additional arguments defined by main process can be recieved as argument.
+		```js
+			export default ({args})=>{
+				tmpl:conf=>x=>``// refer previous section
+			}
+		```
 1. Run `index.mjs`.
 1. A `dst/` directory will be generated.
 

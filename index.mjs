@@ -31,9 +31,12 @@ mksynmod=w=>w&&(m=>(
 		_=>Object.entries(w).forEach(([i,x])=>m.setExport(i,x))
 	)
 ))(),
-modules=Object.entries({
-	...await import(join(root,arg.values['module-index'])),
+mod_of_mod={
 	args:arg.positionals
+},
+modules=Object.entries({
+	...(x=>x.default?.(mod_of_mod)??x)(await import(join(root,arg.values['module-index']))),
+	...mod_of_mod
 }).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
 mod_cache={},
 mksrcmod=async({src,path})=>(
