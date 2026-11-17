@@ -1,5 +1,8 @@
 {
 	"bin":{
 		"6ca-ssg":"./index.mjs"
+	},
+	"exports":{
+		"./*":"./*.mjs"
 	}
 }
