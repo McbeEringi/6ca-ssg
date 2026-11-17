@@ -35,7 +35,10 @@ mod_of_mod={
 	args:arg.positionals
 },
 modules=Object.entries({
-	...(x=>x.default?.(mod_of_mod)??x)(await import(join(root,arg.values['module-index']))),
+	...(x=>({
+		...x,
+		...x.default?.(mod_of_mod)??{}
+	}))(await import(join(root,arg.values['module-index']))),
 	...mod_of_mod
 }).reduce((a,[i,x])=>(a[i]=mksynmod(x),a),{}),
 mod_cache={},
